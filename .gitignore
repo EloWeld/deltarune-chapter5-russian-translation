@@ -1,0 +1,21 @@
+# окружение
+.venv/
+__pycache__/
+.DS_Store
+
+# файлы игры — НЕ распространяются (нужна лицензионная копия DELTARUNE)
+*.ios
+*.bak
+
+# декомпилированный GML и диагностика (генерируется скриптами)
+fontwork/gml/
+fontwork/**/_patched*
+fontwork/**/*_preview.png
+fontwork/_fonts_list.txt
+
+# сырые экспорты текстур игры (восстанавливаются export-скриптами)
+fontwork/fnt_*.png
+fontwork/ja/fnt_*.png
+fontwork/lat2/fnt_*.png
+# ...кроме готовых атласов с кириллицей
+!fontwork/**/fnt_*_new.png
