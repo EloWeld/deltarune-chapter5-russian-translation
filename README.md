@@ -62,6 +62,10 @@ Steam paths on macOS: `~/Library/Application Support/Steam/steamapps/common/DELT
 
 **Rollback**: backups `game.ios.orig.bak` and `lang_ja.json.orig.bak` sit next to the modified files — restore them, or verify game files in Steam.
 
+### Localizing text sprites
+
+`sprites/` holds all 37 text-bearing sprites (137 frame PNGs) the game shows in translated mode — battle buttons, banners, signs. Redraw a PNG (keep dimensions), run `csx/import_sprites.csx`, and the game picks it up. See [HOWTO.md](docs/HOWTO.md).
+
 ### Contributing
 
 Translation progress lives in `out/` (per-chunk). See [HOWTO.md](docs/HOWTO.md) for the chunk workflow (including Claude Code subagents), [PROMPT.md](docs/PROMPT.md) for string formatting rules, and [GLOSSARY_FIXES.md](docs/GLOSSARY_FIXES.md) for known glossary corrections. Pull requests with translation and proofreading are welcome.
@@ -129,6 +133,10 @@ dotnet UndertaleModCli.dll load <путь к game.ios> -s csx/import_font.csx -o
 Пути Steam-версии на macOS: `~/Library/Application Support/Steam/steamapps/common/DELTARUNE/DELTARUNE.app/Contents/Resources/chapter5_mac/`. Для Windows (`data.win` в `chapter5_windows`) скрипты применимы с минимальной правкой путей.
 
 **Откат**: рядом с изменёнными файлами лежат бэкапы `game.ios.orig.bak` и `lang_ja.json.orig.bak` — просто верните их на место, либо проверьте целостность файлов в Steam.
+
+### Русификация графики
+
+В `sprites/` — все 37 спрайтов с текстом (137 кадров-PNG): кнопки боя, баннеры, вывески. Перерисуйте PNG (размер не менять), запустите `csx/import_sprites.csx` — игра подхватит. Подробнее в [HOWTO.md](docs/HOWTO.md).
 
 ### Участие в переводе
 
