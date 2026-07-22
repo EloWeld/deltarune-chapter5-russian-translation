@@ -50,10 +50,23 @@ cd deltarune-chapter5-russian-translation
 # 1. Text: build lang_ja.json and install it into the game (a backup is created automatically)
 python3 scripts/build_install.py
 
-# 2. Fonts: inject Cyrillic into game.ios (paths are configured inside the scripts)
-#    order: import_font.csx -> import_ja_fonts.csx -> patch_spacing.csx -> patch_round3.csx
-dotnet UndertaleModCli.dll load <path to game.ios> -s csx/import_font.csx -o game_patched.ios
-# ... see HOWTO.md for the full sequence
+# 2. Fonts: inject Cyrillic into the CHAPTER 5 data file.
+#    IMPORTANT: patch chapter5_mac/game.ios — the file the game actually loads.
+#    Do NOT patch Resources/game.ios: that is only the chapter-select launcher
+#    (a separate, YYC-compiled data file with a different, smaller font set).
+#    Also edit the hardcoded `workDir` at the top of each csx to your own fontwork/ path.
+DLL="$HOME/utmt/UndertaleModCli/bin/Release/net10.0/UndertaleModCli.dll"   # your built CLI
+GAME="$HOME/Library/Application Support/Steam/steamapps/common/DELTARUNE/DELTARUNE.app/Contents/Resources/chapter5_mac/game.ios"
+
+[ -f "$GAME.orig.bak" ] || cp "$GAME" "$GAME.orig.bak"                     # back up the original once
+
+# run all four scripts in order, each over the previous output:
+dotnet "$DLL" load "$GAME"           -s csx/import_font.csx     -o game_patched.ios
+dotnet "$DLL" load game_patched.ios  -s csx/import_ja_fonts.csx -o game_patched.ios
+dotnet "$DLL" load game_patched.ios  -s csx/patch_spacing.csx   -o game_patched.ios
+dotnet "$DLL" load game_patched.ios  -s csx/patch_round3.csx    -o game_patched.ios
+
+cp game_patched.ios "$GAME"                                                # install into the game
 
 # 3. In-game, select the 日本語 language
 ```
@@ -122,10 +135,23 @@ cd deltarune-chapter5-russian-translation
 # 1. Текст: собрать lang_ja.json и установить в игру (бэкап создаётся автоматически)
 python3 scripts/build_install.py
 
-# 2. Шрифты: вшить кириллицу в game.ios (пути внутри скриптов)
-#    порядок: import_font.csx -> import_ja_fonts.csx -> patch_spacing.csx -> patch_round3.csx
-dotnet UndertaleModCli.dll load <путь к game.ios> -s csx/import_font.csx -o game_patched.ios
-# ... полная последовательность — в HOWTO.md
+# 2. Шрифты: вшить кириллицу в data-файл ГЛАВЫ 5.
+#    ВАЖНО: патчить chapter5_mac/game.ios — именно его грузит игра.
+#    НЕ патчить Resources/game.ios: это лишь лаунчер выбора главы
+#    (отдельный YYC-файл с другим, меньшим набором шрифтов).
+#    Также поправьте захардкоженный `workDir` вверху каждого csx на свой путь к fontwork/.
+DLL="$HOME/utmt/UndertaleModCli/bin/Release/net10.0/UndertaleModCli.dll"   # ваш собранный CLI
+GAME="$HOME/Library/Application Support/Steam/steamapps/common/DELTARUNE/DELTARUNE.app/Contents/Resources/chapter5_mac/game.ios"
+
+[ -f "$GAME.orig.bak" ] || cp "$GAME" "$GAME.orig.bak"                     # бэкап оригинала (один раз)
+
+# прогнать все четыре скрипта по порядку, каждый над результатом предыдущего:
+dotnet "$DLL" load "$GAME"           -s csx/import_font.csx     -o game_patched.ios
+dotnet "$DLL" load game_patched.ios  -s csx/import_ja_fonts.csx -o game_patched.ios
+dotnet "$DLL" load game_patched.ios  -s csx/patch_spacing.csx   -o game_patched.ios
+dotnet "$DLL" load game_patched.ios  -s csx/patch_round3.csx    -o game_patched.ios
+
+cp game_patched.ios "$GAME"                                                # установить в игру
 
 # 3. В игре выбрать язык 日本語
 ```
