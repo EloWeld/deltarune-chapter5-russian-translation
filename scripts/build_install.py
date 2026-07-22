@@ -46,6 +46,7 @@ def main():
             if k in skipped: skipped.remove(k)
 
     # ручные override'ы (например строки меню) — применяются последними
+    ovr = {}
     ovr_path = os.path.join(BASE, "out", "overrides.json")
     if os.path.exists(ovr_path):
         ovr = json.load(open(ovr_path, encoding="utf-8"))
@@ -55,11 +56,23 @@ def main():
                 merged[k] = v; translated += 1; applied += 1
         print(f"override'ов применено: {applied}")
 
+    # обрубки английского извлечения: для ~967 строк extract_en_bytecode дал "ja"
+    # вместо реплики (напр. NPC с акцентным "ja"). В японском слоте такой обрубок
+    # без терминатора /% вешает диалог намертво — откатываем на японский оригинал
+    # (штатный fallback: «the rest falls back to the official Japanese text»).
+    orig = json.load(open(BAK_PATH if os.path.exists(BAK_PATH) else JA_PATH, encoding="utf-8"))
+    ja_fallback_keys = set()
+    for k in merged:
+        if isinstance(merged[k], str) and merged[k].strip() == "ja" \
+           and isinstance(orig.get(k), str) and orig[k].strip() != "ja":
+            merged[k] = orig[k]; ja_fallback_keys.add(k)
+    print(f"обрубки 'ja' -> японский оригинал: {len(ja_fallback_keys)}")
+
     # проверка кодов по всему, что считаем переведённым
     bad = 0
     for f in sorted(glob.glob(os.path.join(BASE, "out", "chunk_*.json"))):
         for k in json.load(open(f, encoding="utf-8")):
-            if k in source and sig(source[k]) != sig(merged[k]):
+            if k in source and k not in ja_fallback_keys and k not in ovr and sig(source[k]) != sig(merged[k]):
                 bad += 1
     print(f"переведено строк: {translated}/{len(source)}  ({100*translated/len(source):.1f}%)")
     print(f"откат на английский (битые коды): {len(skipped)}  -> см. skipped.json")
@@ -67,8 +80,7 @@ def main():
     json.dump(skipped, open(os.path.join(BASE, "skipped.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
 
-    # date из оригинального lang_ja
-    orig = json.load(open(BAK_PATH if os.path.exists(BAK_PATH) else JA_PATH, encoding="utf-8"))
+    # date из оригинального lang_ja (orig уже загружен выше для ja-fallback)
     out = collections.OrderedDict()
     out["date"] = orig.get("date", "0")
     for k, v in merged.items():
