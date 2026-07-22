@@ -13,7 +13,8 @@ string[] fonts = { "fnt_ja_main", "fnt_ja_mainbig", "fnt_ja_small", "fnt_ja_8bit
 
 foreach (var fontName in fonts)
 {
-    var f = Data.Fonts.First(x => x.Name.Content == fontName);
+    var f = Data.Fonts.FirstOrDefault(x => x.Name.Content == fontName);
+    if (f == null) { Console.WriteLine($"{fontName}: НЕТ в игре, пропуск"); continue; }
     var oldTex = f.Texture.TexturePage;
     var oldFmt = oldTex.TextureData.Image.Format;
 

@@ -14,7 +14,8 @@ string workDir = "/Users/mtglitch/deltarune-ch5-ru/fontwork/lat2";
 string[] fonts = { "fnt_8bit", "fnt_dotumche", "fnt_comicsans", "fnt_tinynoelle" };
 foreach (var fontName in fonts)
 {
-    var f = Data.Fonts.First(x => x.Name.Content == fontName);
+    var f = Data.Fonts.FirstOrDefault(x => x.Name.Content == fontName);
+    if (f == null) { Console.WriteLine($"{fontName}: НЕТ в игре, пропуск"); continue; }
     var oldTex = f.Texture.TexturePage;
     var oldFmt = oldTex.TextureData.Image.Format;
 
@@ -79,18 +80,24 @@ var gctx = new GlobalDecompileContext(Data);
 var settings = Data.ToolInfo.DecompilerSettings;
 var group = new CodeImportGroup(Data);
 
-var wcode = Data.Code.First(x => x.Name.Content == "gml_Object_obj_writer_Draw_0");
-string wsrc = new Underanalyzer.Decompiler.DecompileContext(gctx, wcode, settings).DecompileToString();
-var reW = new Regex(@"(else if \(ord\((\w+)\) < 8192\)\s*\{\s*\w+ -= \(\(\w+ / 2\) - )1(\);\s*\})");
-if (!reW.IsMatch(wsrc)) { Console.WriteLine("obj_writer: ПАТТЕРН НЕ НАЙДЕН"); }
-else { group.QueueReplace(wcode, reW.Replace(wsrc, "${1}2$3")); Console.WriteLine("obj_writer: -1 -> -2 ок"); }
+var wcode = Data.Code.FirstOrDefault(x => x.Name.Content == "gml_Object_obj_writer_Draw_0");
+if (wcode == null) { Console.WriteLine("obj_writer: код отсутствует, пропуск"); }
+else {
+    string wsrc = new Underanalyzer.Decompiler.DecompileContext(gctx, wcode, settings).DecompileToString();
+    var reW = new Regex(@"(else if \(ord\((\w+)\) < 8192\)\s*\{\s*\w+ -= \(\(\w+ / 2\) - )1(\);\s*\})");
+    if (!reW.IsMatch(wsrc)) { Console.WriteLine("obj_writer: ПАТТЕРН НЕ НАЙДЕН"); }
+    else { group.QueueReplace(wcode, reW.Replace(wsrc, "${1}2$3")); Console.WriteLine("obj_writer: -1 -> -2 ок"); }
+}
 
 // 3) battleblcon: замер ширины +1 -> +2
-var bcode = Data.Code.First(x => x.Name.Content == "gml_Object_obj_battleblcon_Draw_0");
-string bsrc = new Underanalyzer.Decompiler.DecompileContext(gctx, bcode, settings).DecompileToString();
-var reB = new Regex(@"(else if \(ord\((\w+)\) < 8192\)\s*\{\s*\w+ \+= \(\(\w+ \* 0\.5\) \+ )1(\);\s*\})");
-if (!reB.IsMatch(bsrc)) { Console.WriteLine("battleblcon: ПАТТЕРН НЕ НАЙДЕН"); }
-else { group.QueueReplace(bcode, reB.Replace(bsrc, "${1}2$3")); Console.WriteLine("battleblcon: +1 -> +2 ок"); }
+var bcode = Data.Code.FirstOrDefault(x => x.Name.Content == "gml_Object_obj_battleblcon_Draw_0");
+if (bcode == null) { Console.WriteLine("battleblcon: код отсутствует, пропуск"); }
+else {
+    string bsrc = new Underanalyzer.Decompiler.DecompileContext(gctx, bcode, settings).DecompileToString();
+    var reB = new Regex(@"(else if \(ord\((\w+)\) < 8192\)\s*\{\s*\w+ \+= \(\(\w+ \* 0\.5\) \+ )1(\);\s*\})");
+    if (!reB.IsMatch(bsrc)) { Console.WriteLine("battleblcon: ПАТТЕРН НЕ НАЙДЕН"); }
+    else { group.QueueReplace(bcode, reB.Replace(bsrc, "${1}2$3")); Console.WriteLine("battleblcon: +1 -> +2 ок"); }
+}
 
 group.Import();
 Console.WriteLine("ROUND3 DONE");

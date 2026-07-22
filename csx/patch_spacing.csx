@@ -16,7 +16,9 @@ string[] fonts = { "fnt_ja_main", "fnt_ja_mainbig", "fnt_ja_small", "fnt_ja_8bit
 // 1) новые Shift для кириллицы (зазор как у латиницы)
 foreach (var fontName in fonts)
 {
-    var f = Data.Fonts.First(x => x.Name.Content == fontName);
+    var f = Data.Fonts.FirstOrDefault(x => x.Name.Content == fontName);
+    if (f == null) { Console.WriteLine($"{fontName}: НЕТ в игре, пропуск"); continue; }
+    if (!File.Exists($"{workDir}/{fontName}_shift.json")) { Console.WriteLine($"{fontName}: нет shift.json, пропуск"); continue; }
     var doc = JsonDocument.Parse(File.ReadAllText($"{workDir}/{fontName}_shift.json"));
     int changed = 0;
     foreach (var g in f.Glyphs)
@@ -40,7 +42,8 @@ var re = new Regex(@"ord\((\w+)\) < 256 \|\| \(ord\(\1\) >= 65377");
 int patched = 0;
 foreach (var name in targets)
 {
-    var code = Data.Code.First(x => x.Name.Content == name);
+    var code = Data.Code.FirstOrDefault(x => x.Name.Content == name);
+    if (code == null) { Console.WriteLine($"{name}: код отсутствует, пропуск"); continue; }
     string src = new Underanalyzer.Decompiler.DecompileContext(gctx, code, settings).DecompileToString();
     if (!re.IsMatch(src))
     {
