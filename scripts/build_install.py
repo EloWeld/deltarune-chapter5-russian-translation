@@ -21,6 +21,13 @@ RU_PATH   = os.path.join(GAME_LANG, "lang_ru_trans.json")   # копия для 
 # validate_all.py. Хардкод откатывал бы унификацию статов обратно на «АТ/ЗЩ».
 FIXES = {}
 
+# Перевод рендерится ЯПОНСКИМИ шрифтами (fnt_ja_*, режим 日本語) — в их наборе
+# глифов нет « » — „ №. Подменяем на присутствующие: — -> ― (U+2015, визуально
+# идентичное тире), « » „ -> ", № -> #. Эти символы не встречаются в японском
+# фолбэке, поэтому замена безопасна для всех строк. Источники (out/) не трогаем —
+# правка только на записи, обратима. Когда глифы появятся в шрифте — убрать карту.
+GLYPH_FALLBACK = str.maketrans({"—": "―", "«": '"', "»": '"', "„": '"', "№": "#"})
+
 CODE_RE = re.compile(r"\\[A-Za-z][A-Za-z0-9]?|\^[0-9]|[&%]|\\\\")
 def sig(s): return collections.Counter(CODE_RE.findall(s))
 
@@ -85,7 +92,7 @@ def main():
     out["date"] = orig.get("date", "0")
     for k, v in merged.items():
         if k != "date":
-            out[k] = v
+            out[k] = v.translate(GLYPH_FALLBACK) if isinstance(v, str) else v
 
     # бэкап оригинала один раз
     if not os.path.exists(BAK_PATH):

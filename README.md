@@ -88,6 +88,8 @@ dotnet "$DLL" load "$GAME"           -s csx/import_font.csx     -o game_patched.
 dotnet "$DLL" load game_patched.ios  -s csx/import_ja_fonts.csx -o game_patched.ios
 dotnet "$DLL" load game_patched.ios  -s csx/patch_spacing.csx   -o game_patched.ios
 dotnet "$DLL" load game_patched.ios  -s csx/patch_round3.csx    -o game_patched.ios
+dotnet "$DLL" load game_patched.ios  -s csx/import_sprites.csx  -o game_patched.ios   # Russian text sprites (run on a base without sprites)
+dotnet "$DLL" load game_patched.ios  -s csx/texture_swap_ja.csx -o game_patched.ios   # point every _ja/_jp sprite at its English/Russian base
 
 cp game_patched.ios "$GAME"                                                # install into the game
 
@@ -197,6 +199,8 @@ dotnet "$DLL" load "$GAME"           -s csx/import_font.csx     -o game_patched.
 dotnet "$DLL" load game_patched.ios  -s csx/import_ja_fonts.csx -o game_patched.ios
 dotnet "$DLL" load game_patched.ios  -s csx/patch_spacing.csx   -o game_patched.ios
 dotnet "$DLL" load game_patched.ios  -s csx/patch_round3.csx    -o game_patched.ios
+dotnet "$DLL" load game_patched.ios  -s csx/import_sprites.csx  -o game_patched.ios   # русские спрайты с текстом (на базе без спрайтов)
+dotnet "$DLL" load game_patched.ios  -s csx/texture_swap_ja.csx -o game_patched.ios   # каждый _ja/_jp спрайт -> его английская/русская база
 
 cp game_patched.ios "$GAME"                                                # установить в игру
 

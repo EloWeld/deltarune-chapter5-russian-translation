@@ -171,6 +171,14 @@ do_install() {
     cp "$TMP/lang.json" "$LANG_JA" || { fail "не удалось записать lang_ja.json"; return; }
     say "    ${GRN}✓ текст: готово${R}"
 
+    # интро-видео: в японском слоте показываем английский ролик вместо японского
+    # (файлы уже есть в игре — качать нечего; японский оригинал бэкапим)
+    VID="$GAME_DIR/vid"
+    if [ -f "$VID/ch5_intro_en.mp4" ] && [ -f "$VID/ch5_intro_jp.mp4" ]; then
+        [ -f "$VID/ch5_intro_jp.mp4.orig.bak" ] || cp "$VID/ch5_intro_jp.mp4" "$VID/ch5_intro_jp.mp4.orig.bak"
+        cp "$VID/ch5_intro_en.mp4" "$VID/ch5_intro_jp.mp4" && say "    ${GRN}✓ интро-видео: английское${R}"
+    fi
+
     detect_state
     line
     say "  ${GRN}${B}Готово!${R} Осталось одно:"
@@ -198,6 +206,10 @@ do_rollback() {
         cp "$LANG_BAK" "$LANG_JA" && { say "  ✓ lang_ja.json восстановлен"; done=1; }
     else
         say "  – бэкапа lang_ja.json нет"
+    fi
+    if [ -f "$GAME_DIR/vid/ch5_intro_jp.mp4.orig.bak" ]; then
+        cp "$GAME_DIR/vid/ch5_intro_jp.mp4.orig.bak" "$GAME_DIR/vid/ch5_intro_jp.mp4" \
+            && { say "  ✓ интро-видео восстановлено"; done=1; }
     fi
     if [ "$done" = 0 ]; then
         say ""

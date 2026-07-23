@@ -1,47 +1,64 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UndertaleModLib;
 using UndertaleModLib.Models;
 using UndertaleModLib.Util;
 
-// Экспорт локализуемых спрайтов (те, что в ja-режиме подменялись японскими)
-// в sprites/ репозитория: <имя>_<кадр>.png. Их можно перерисовать на русский
-// и вшить обратно скриптом import_sprites.csx.
+// Экспорт локализуемых спрайтов в sprites/: <имя>_<кадр>.png — их перерисовывают
+// на русский и вшивают import_sprites.csx. Локаль в игре показывает японские версии
+// (spr_X_ja / spr_X_jp); мы редактируем АНГЛИЙСКИЙ источник (spr_X либо spr_X_en),
+// а texture_swap_ja.csx направляет _ja/_jp на него.
+//
+// Набор находится ДИНАМИЧЕСКИ: для каждого spr_*_ja / spr_*_jp берём английский
+// источник; если его нет (чисто японский спрайт) — сам _ja (редроу поверх японского).
+// Плюс явный список ниже — спрайты, что подменяются через карту scr_84 без _ja-двойника.
+// СУЩЕСТВУЮЩИЕ PNG НЕ ПЕРЕЗАПИСЫВАЕМ (чтобы не затереть готовый русский редроу).
+
 string outDir = "/Users/mtglitch/deltarune-ch5-ru/sprites";
 Directory.CreateDirectory(outDir);
-string[] names = {
+
+// спрайты, локализуемые через карту (нет _ja-двойника в ассетах)
+string[] mapOnly = {
     "spr_bnamekris", "spr_bnameralsei", "spr_bnamesusie", "spr_bnamenoelle",
     "spr_battlemsg", "spr_btact", "spr_btdefend", "spr_btfight", "spr_btitem",
     "spr_btspare", "spr_bttech", "spr_darkmenudesc", "spr_dmenu_captions",
     "spr_quitmessage", "spr_fieldmuslogo", "spr_shop_space_ui",
-    "spr_funnytext_dump_her", "spr_funnytext_ass", "spr_face_queen",
-    "bg_building_icee_sign_ch5", "spr_dw_fcastle_second_diner_sign_en",
-    "spr_cafe_cheese_owe_money", "spr_dw_castle_welcome_sign",
-    "spr_dw_fcastle_foyer_sign", "spr_dw_garden_exit",
-    "spr_dw_scarecrow_not_enemy_sign", "spr_face_susie_queen",
-    "spr_fcastle_jail_chute", "spr_gardenmuslogo", "spr_green_sign",
-    "spr_green_sign_owe_money", "spr_green_sign_owe_money_left",
-    "spr_green_sign_welcome_pink", "spr_pink_mewers_live",
-    "spr_pink_mewers_live_dim", "spr_thrashfit_header", "spr_thrashstats_susie",
+    "spr_funnytext_ass", "spr_face_queen",
 };
 
-int files = 0, missing = 0;
+var targets = new SortedSet<string>(mapOnly);
+var suffix = new Regex("_(ja|jp)$");
+bool Has(string n) => Data.Sprites.Any(x => x.Name.Content == n);
+
+foreach (var s in Data.Sprites.Where(x => suffix.IsMatch(x.Name.Content)))
+{
+    string b = suffix.Replace(s.Name.Content, "");
+    if (Has(b)) targets.Add(b);                 // английская база spr_X
+    else if (Has(b + "_en")) targets.Add(b + "_en");  // либо spr_X_en
+    else targets.Add(s.Name.Content);           // чисто японский — редроу поверх _ja
+}
+
+int wrote = 0, kept = 0, missing = 0;
 using (var tw = new TextureWorker())
 {
-    foreach (var name in names)
+    foreach (var name in targets)
     {
         var s = Data.Sprites.FirstOrDefault(x => x.Name.Content == name);
-        if (s == null) { Console.WriteLine($"НЕ НАЙДЕН в Sprites: {name}"); missing++; continue; }
+        if (s == null) { Console.WriteLine($"НЕ НАЙДЕН: {name}"); missing++; continue; }
         for (int i = 0; i < s.Textures.Count; i++)
         {
             var t = s.Textures[i]?.Texture;
             if (t == null) continue;
-            var img = tw.GetTextureFor(t, name, true);   // с паддингом до полного размера спрайта
-            img.Write($"{outDir}/{name}_{i}.png");
-            files++;
+            string path = $"{outDir}/{name}_{i}.png";
+            if (File.Exists(path)) { kept++; continue; }   // не трогаем существующий редроу
+            tw.GetTextureFor(t, name, true).Write(path);
+            wrote++;
         }
     }
 }
-Console.WriteLine($"экспортировано PNG: {files}, не найдено: {missing}");
+Console.WriteLine($"локализуемых спрайтов: {targets.Count}");
+Console.WriteLine($"новых PNG: {wrote}, сохранено существующих: {kept}, не найдено: {missing}");
 Console.WriteLine("EXPORT SPRITES DONE");
